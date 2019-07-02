@@ -26,12 +26,11 @@ module.exports = {
         enum: ['active', 'inactive']
     },
 
-
     hooks: { // after action happens
         availability: {
             onCreate: {
-                url: String,        // http:inv-api-dev.m-sas.com/hooks/store
-                action: String,     // POST
+                url: String, // https://domain.com/hooks/store
+                action: String, // POST
                 headers: {}
             },
             onUpdate: {

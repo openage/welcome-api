@@ -4,8 +4,9 @@ module.exports = [{
         'parameters': [
             'x-role-key',
             { name: 'agentId', in: 'query', description: 'agent id', required: true, type: 'string' },
-            { name: 'fromDate', in: 'query', description: 'date', required: false, type: 'string' },
-            { name: 'tillDate', in: 'query', description: 'date', required: false, type: 'string' },
+            { name: 'fromDate', in: 'query', description: 'date', required: true, type: 'string' },
+            { name: 'tillDate', in: 'query', description: 'date', required: true, type: 'string' },
+            { name: 'byMonth', in: 'query', description: 'boolean', required: false, type: 'string' }
         ]
     }
 }]

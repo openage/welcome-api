@@ -4,7 +4,7 @@ const db = require('./../../../../models')
 let bapInvoiceProvider = require('../../../../providers/bap/invoice')
 
 exports.process = async (data, context) => {
-    let log = context.logger.start('processors/cancelled/defaults:notify-agent')
+    let log = context.logger.start('processors/cancelled/defaults:cancel-invoice')
 
     if (!data) { return }
 

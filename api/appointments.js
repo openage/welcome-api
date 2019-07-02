@@ -1,16 +1,20 @@
 'use strict'
 let moment = require('moment-timezone')
 const logger = require('@open-age/logger')('appointments')
-const appointments = require('../services/appointments')
-const mapper = require('../mappers/appointment')
-const visitors = require('../services/visitors')
-const agents = require('../services/agents')
+const offline = require('@open-age/offline-processor')
+
 const db = require('../models')
+const appointments = require('../services/appointments')
+const visitors = require('../services/visitors')
+
+const agents = require('../services/agents')
+const mapper = require('../mappers/appointment')
 
 exports.create = async (req, res) => {
     let log = req.context.logger.start('api/appointments:create')
 
     let agent = await agents.getByIdOrContext(req.body.agent.id, req.context)
+
     if (!agent) {
         throw new Error('agent does not exist')
     }
@@ -40,6 +44,7 @@ exports.create = async (req, res) => {
         user: req.context.user,
         organization: req.context.agent.organization
     }
+
     let visitor = await visitors.findOrCreate(visitorData, req.context)
 
     log.debug('new visitor', `${visitor}`)
@@ -124,7 +129,7 @@ exports.get = async (req) => {
 }
 
 exports.search = async (req, res) => {
-    let log = req.context.logger.start('search')
+    let log = req.context.logger.start('api/appointments:search')
     let query = {}
 
     query.status = req.query.status || { $in: ['scheduled', 'rescheduled'] }
@@ -134,22 +139,37 @@ exports.search = async (req, res) => {
     }
 
     if (req.query.agentId) {
-        query.agent = req.query.agentId
-    }
-
-    if (req.query.visitorId) {
-        query.visitor = req.query.visitorId
-    }
-
-    if (req.query.date) {
-        query.from = req.query.date
-    } else {
-        query.from = {
-            $gte: moment().toDate()
+        let queryAgentIds = req.query.agentId.split(',')
+        let agentIds = queryAgentIds.map(id => id.toObjectId())
+        query.agent = {
+            $in: agentIds
         }
     }
 
-    let appointmentList = await db.appointment.find(query).populate('organization')
+    if (req.query.visitorId) {
+        let queryVisitorIds = req.query.visitorId.split(',')
+        let visitorIds = queryVisitorIds.map(id => id.toObjectId())
+        query.visitor = {
+            $in: visitorIds
+        }
+    }
+
+    if (req.query.date) {
+        query.from = {
+            $gte: moment(req.query.date).startOf('day')
+        }
+        query.till = {
+            $lt: moment(req.query.date).endOf('day')
+        }
+    }
+
+    let appointmentList = await db.appointment.find(query).populate('organization').populate({
+        path: 'agent visitor',
+        populate: {
+            path: 'user'
+        }
+    })
+
     log.debug('appointments', `${appointmentList}`)
 
     log.end()
@@ -236,7 +256,52 @@ exports.agentAppointments = async (req) => {
     }
 
     let agentSchedule = await appointments.agentAppointments(query, req.context)
-    log.end()
 
+    log.end()
     return mapper.toSearchModel(agentSchedule)
+}
+
+exports.cancelAgentAppointment = async (req) => {
+    let log = req.context.logger.start('api/appointments:cancelAgentAppointment')
+
+    let agentId = req.params.id === 'my' ? null : req.params.id
+
+    let agent = await agents.getByIdOrContext(agentId, req.context)
+
+    if (!agent) {
+        throw new Error('agent not found')
+    }
+
+    let data = {
+        from: req.body.from,
+        till: req.body.till,
+        agentId: agent.id
+    }
+
+    req.context.processSync = true
+    offline.queue('appointment', 'cancelAgentAppointment', data, req.context)
+
+    log.end()
+    return {
+        message: `Appointments from: ${moment(data.from).format('MMMM Do YYYY, h:mm:ss a')} to till: ${moment(data.till).format('MMMM Do YYYY, h:mm:ss a')} process to cancel`
+    }
+}
+
+exports.bulkUpdate = async (req) => {
+    let log = req.context.logger.start('api/appointments:bulkUpdate')
+
+    let items = req.body.items || []
+
+    if (!items.length) {
+        throw new Error('no appointment found')
+    }
+
+    for (let item of items) {
+        let appointment = await appointments.getById(item.id, req.context)
+
+        await appointments.update(item, appointment, req.context)
+    }
+
+    log.end()
+    return 'appointments successfully updated'
 }

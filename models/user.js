@@ -5,11 +5,20 @@ module.exports = {
     role: {
         id: {
             type: String,
-            // unique: true
+            unique: true,
+            index: true,
+            required: [true, 'role id required']
         },
-        key: { type: String },
+        key: {
+            type: String,
+            unique: true,
+            index: true
+        },
         code: { type: String },
         permissions: [{ type: String }],
+        user: {
+            id: String
+        },
         organization: {
             id: String,
             code: String
@@ -31,9 +40,12 @@ module.exports = {
             'male', 'female', 'other'
         ]
     },
+    isPhoneValidate: { type: Boolean },
+    isEmailValidate: { type: Boolean },
+    isProfileComplete: { type: Boolean },
     tenant: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'tenant',
-        //  required: true
+        required: true
     }
 }

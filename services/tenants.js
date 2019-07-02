@@ -1,12 +1,21 @@
 'use strict'
 
+const db = require('../models')
+
 const create = async (model, context) => {
-    context.logger.start('services/tenants:create')
+    let log = context.logger.start('services/tenants:create')
+
+    let tenant = await new db.tenant(model)
+
+    log.end()
+    return tenant.save()
 }
 
 const get = async (query, context) => {
     let log = context.logger.start('services/tenants:get')
+
     let tenant
+
     if (typeof query === 'string') {
         if (query.toObjectId()) {
             tenant = db.tenant.findById(query)
@@ -27,7 +36,6 @@ const get = async (query, context) => {
     return tenant ? tenant.populate('owner') : null
 }
 
-
 const getOrCreate = async (model, context) => {
     let log = context.logger.start('services/tenants:getOrCreate')
 
@@ -38,7 +46,6 @@ const getOrCreate = async (model, context) => {
     }
 
     log.end()
-
     return tenant
 }
 

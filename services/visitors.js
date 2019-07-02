@@ -5,6 +5,8 @@ const logger = require('@open-age/logger')('validators/visitors')
 const db = require('../models')
 const userService = require('./users')
 
+const directoryProvider = require('../providers/directory')
+
 const create = async (model, context) => {
     let log = context.logger.start('services/visitors:create')
 
@@ -20,6 +22,7 @@ const create = async (model, context) => {
 
     let visitor = await new db.visitor(model).save()
 
+    log.end()
     return db.visitor.findById(visitor.id).populate('user organization')
 }
 
@@ -103,13 +106,22 @@ const findOrCreate = async (data, context) => {
 
     if (data.id) {
         visitor = await db.visitor.findById(data.id).populate('user')
+        if (!visitor) {
+            throw new Error('visitor not found')
+        }
+        return visitor
     } else if (data.role) {
         user = await userService.get({ role: data.role }, context)
         if (!user) {
-            user = await userService.create(data, context)
+            let roleId = data.role.id
+            log.debug('roleId', roleId)
+            let tokenKey = context.user.role.key
+            log.debug('token', tokenKey)
+            let role = await directoryProvider.getRoleById(roleId, tokenKey)
+            user = await userService.sync(role, context)
         }
     } else {
-        user = data.user || req.context.user
+        user = data.user || context.user
     }
 
     if (!user) { throw new Error('user required to create visitor') }

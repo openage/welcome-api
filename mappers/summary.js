@@ -2,12 +2,17 @@
 
 exports.toModel = entity => {
     var model = {
-        date: entity.date
+        date: entity.date,
+        isDaySummary: entity.isDaySummary,
+        isMonthSummary: entity.isMonthSummary,
+        isYearSummary: entity.isYearSummary
     }
 
-    if (entity.appointments) {
+    if (entity.appointment) {
         model.appointments = {
-            status: entity.appointments.status
+            total: entity.appointment.total,
+            booked: entity.appointment.booked,
+            status: entity.appointment.status
         }
     }
 

@@ -6,7 +6,7 @@ module.exports = {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'agent'
     },
-    appointments: {
+    appointment: {
         booked: Number,
         total: Number
     }

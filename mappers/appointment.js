@@ -22,13 +22,12 @@ exports.toModel = entity => {
                 id: entity.agent.id
             }
             if (entity.agent.user._doc) {
-                model.agent.firstName = entity.agent.user.firstName
-                model.agent.lastName = entity.agent.user.lastName
-                model.agent.picUrl = entity.agent.user.picUrl
                 model.agent.profile = {
                     firstName: entity.agent.user.firstName,
                     lastName: entity.agent.user.lastName,
-                    pic: entity.agent.user.pic ? entity.agent.user.pic : { url: entity.agent.user.picUrl }
+                    pic: entity.agent.user.pic ?
+                        entity.agent.user.pic :
+                        { url: entity.agent.user.picUrl }
                 }
                 model.agent.role = {
                     id: entity.agent.user.role.id
@@ -44,10 +43,6 @@ exports.toModel = entity => {
     if (entity.visitor) {
         model.visitor = entity.visitor._doc ? entity.visitor.user._doc ? {
             id: entity.visitor.id,
-            firstName: entity.visitor.user.firstName, // TODO: obsolete
-            lastName: entity.visitor.user.lastName, // TODO: obsolete
-            picUrl: entity.visitor.user.picUrl, // TODO: obsolete
-            roleId: entity.visitor.user.role.id, // TODO: obsolete
             role: {
                 id: entity.visitor.user.role.id,
                 code: entity.visitor.user.role.code

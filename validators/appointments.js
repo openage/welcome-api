@@ -1,9 +1,6 @@
 'use strict'
 
 let moment = require('moment-timezone')
-const appointments = require('../services/appointments')
-const agents = require('../services/agents')
-const db = require('../models')
 
 exports.canCreate = async (req) => {
     if (!req.body.agent) {
@@ -14,7 +11,7 @@ exports.canCreate = async (req) => {
         return 'till and from time both required'
     }
 
-    if (moment(req.body.from).isBefore(moment())) {
+    if (moment(req.body.till).isBefore(moment())) {
         return 'appointment not available'
     }
 
@@ -32,15 +29,23 @@ exports.canUpdate = async (req) => {
         return 'till and from time both required.'
     }
 
-    if (req.body.form && moment(req.body.from).isBefore(moment())) {
+    if (moment(req.body.till).isBefore(moment())) {
         return 'appointment not available'
     }
-
-
 }
 
-exports.get = async (req) => {
+exports.canGet = async (req) => {
     if (!req.params.id) {
         return 'appointment id required.'
+    }
+}
+
+exports.canCancelAgentAppointment = async (req) => {
+    if (!req.body) {
+        return 'invalid request'
+    }
+
+    if (!req.body.from || !req.body.till) {
+        return 'from and till date required'
     }
 }

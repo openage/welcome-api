@@ -15,71 +15,6 @@ let parsedConfig = (config) => {
     }
 }
 
-/*
-const cloneUser = async (role) => { // create user and organization if not exist
-    let log = logger.start('cloneUser')
-    let claims = {}
-    let userModel = {
-        role: {
-            id: role.id,
-            key: role.key,
-            permissions: role.permissions
-        },
-        authId: role.user.id,
-        email: role.user.email,
-        phone: role.user.phone,
-        picUrl: role.user.picUrl,
-        firstName: role.user.profile.firstName,
-        lastName: role.user.profile.lastName,
-        gender: role.user.profile.gender,
-        dob: role.user.profile.dob
-    }
-
-    if (role.organization) {
-        userModel.role.organization = {
-            id: role.organization.id,
-            name: role.organization.name,
-            code: role.organization.code
-        }
-    }
-
-    log.info('user_creation_model', userModel)
-
-    let user = await db.user.findOrCreate({ 'role.id': role.id }, userModel)
-
-    if (user.created) {
-        log.info('new user created')
-    } else {
-        log.info('user already exist')
-    }
-
-    claims.user = user.result
-
-    if (role.organization) {
-        let organizationModel = {
-            code: role.organization.code,
-            name: role.organization.name
-        }
-
-        let organization = await db.organization.findOrCreate({ code: role.organization.code }, organizationModel)
-
-        if (organization.created) {
-            log.info('new organization created')
-        } else {
-            log.info('organization already exist')
-        }
-
-        claims.organization = organization.result
-    }
-
-    if (user.result.role.key !== role.key) {
-        user.result.role.key = role.key
-        await user.result.save()
-    }
-
-    return claims
-}
-*/
 exports.getRole = (roleKey) => { // Get role from user dictatory
     let log = logger.start('getRole')
 
@@ -104,20 +39,23 @@ exports.getRole = (roleKey) => { // Get role from user dictatory
     })
 }
 
-exports.getRoleById = (id) => {
+exports.getRoleById = (id, token) => {
     let log = logger.start('getRoleById')
 
     let config = parsedConfig()
+
     let args = {
         headers: {
             'Content-Type': 'application/json',
-            'x-service-key': config.tenantKey
+            'x-role-key': token
         }
     }
 
-    return new Promise((resolve, reject) => {
-        const url = `${config.url}/api/roles/${id}`
+    let url = `${directoryConfig.url}/api/roles/${id}`
 
+    log.debug(`fetching data from url: ${url}`)
+
+    return new Promise((resolve, reject) => {
         return client.get(url, args, (data, response) => {
             log.end()
             if (!data || !data.isSuccess) {
@@ -127,4 +65,4 @@ exports.getRoleById = (id) => {
         })
     })
 }
-// exports.cloneUser = cloneUser
+

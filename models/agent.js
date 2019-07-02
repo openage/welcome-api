@@ -16,7 +16,8 @@ module.exports = {
     }],
     organization: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'organization'
+        ref: 'organization',
+        required: true
     },
     searchData: { type: Object }
 }

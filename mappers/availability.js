@@ -35,6 +35,22 @@ exports.toModel = (entity) => {
         }
     }
 
+    if (entity.type) {
+        if (entity.type._doc) {
+            model.type = {
+                name: entity.type.name,
+                purpose: entity.type.purpose,
+                maxQueueSize: entity.type.maxQueueSize,
+                schedule: entity.type.schedule,
+                status: entity.type.status
+            }
+        } else {
+            model.type = {
+                id: entity.type.toString()
+            }
+        }
+    }
+
     return model
 }
 

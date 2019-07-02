@@ -26,5 +26,9 @@ module.exports = {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user'
     },
-    tenant: { type: mongoose.Schema.Types.ObjectId, ref: 'tenant' }
+    tenant: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'tenant',
+        required: true
+    }
 }

@@ -19,6 +19,8 @@ exports.organizationUpdate = async (req) => {
 
     offline.queue('queueLog', 'create', { id: queueLog.id }, req.context)
 
+    log.end()
+
     return 'organization update'
 }
 
@@ -38,5 +40,6 @@ exports.userUpdate = async (req) => {
 
     offline.queue('queueLog', 'create', { id: queueLog.id }, req.context)
 
+    log.end()
     return 'user update'
 }

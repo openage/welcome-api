@@ -4,7 +4,6 @@ const logger = require('@open-age/logger')('services/agents')
 const db = require('../models')
 const updateScheme = require('../helpers/updateEntities')
 
-
 const update = async (model, agent) => {
     logger.start('update')
     updateScheme.update(model, agent)
@@ -12,7 +11,7 @@ const update = async (model, agent) => {
 }
 
 const getByIdOrContext = async (id, context) => {
-    context.logger.start('getById')
+    context.logger.start('getByIdOrContext')
 
     let query = {}
 
@@ -43,7 +42,10 @@ const create = async (model, context) => {
         model.organization = context.organization
     }
 
-    let agent = await db.agent.findOrCreate({ user: context.user.id, organization: context.organization.id }, model)
+    let agent = await db.agent.findOrCreate({
+        user: context.user.id,
+        organization: context.organization.id
+    }, model)
 
     log.end()
     return getByIdOrContext(agent.result.id, context)
@@ -112,11 +114,13 @@ const getOrCreate = async (id, context) => {
         }, context)
     }
 
+    log.end()
     return agent
 }
 
 exports.getOrCreate = getOrCreate
 exports.get = get
 exports.create = create
+
 exports.update = update
 exports.getByIdOrContext = getByIdOrContext

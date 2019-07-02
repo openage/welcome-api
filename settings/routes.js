@@ -144,9 +144,21 @@ module.exports.configure = (app, logger) => {
             method: 'update',
             url: '/:id',
             filter: auth.requiresRoleKey
-
+        }, {
+            action: 'POST',
+            method: 'cancelAgentAppointment',
+            url: '/agent/:id/cancel',
+            filter: auth.requiresRoleKey
+        }, {
+            action: 'POST',
+            method: 'bulkUpdate',
+            url: '/bulk/update',
+            filter: auth.requiresRoleKey
         }])
-    api.model({ root: 'queueTypes', controller: 'queue-types' })
+    api.model({
+        root: 'queueTypes',
+        controller: 'queue-types'
+    })
         .register([{
             action: 'POST',
             method: 'create',
@@ -218,7 +230,8 @@ module.exports.configure = (app, logger) => {
             filter: auth.requiresRoleKey
         }, {
             action: 'GET',
-            method: 'search'
+            method: 'search',
+            filter: auth.requiresRoleKey
         }, {
             action: 'GET',
             method: 'getByAgent',
@@ -230,7 +243,22 @@ module.exports.configure = (app, logger) => {
             url: '/:id',
             filter: auth.requiresRoleKey
         }])
-
+    api.model('sessions')
+        .register([{
+            action: 'POST',
+            method: 'create',
+            filter: auth.requiresTenantCode
+        }, {
+            action: 'GET',
+            method: 'get',
+            url: '/:id',
+            filter: auth.requiresTenantCode
+        }, {
+            action: 'PUT',
+            method: 'update',
+            url: '/:id',
+            filter: auth.requiresRoleKey
+        }])
     api.model('slots')
         .register([{
             action: 'GET',

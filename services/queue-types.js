@@ -123,7 +123,7 @@ const get = async (query, context) => {
 }
 
 const getOrCreate = async (data, context) => {
-    let log = context.logger.start("services:queue-type:get")
+    let log = context.logger.start('services:queue-type:get')
 
     let queueType = await get(data, context)
 
@@ -131,6 +131,7 @@ const getOrCreate = async (data, context) => {
         return create(data, context)
     }
 
+    log.end()
     return queueType
 }
 

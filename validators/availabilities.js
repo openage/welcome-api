@@ -10,10 +10,7 @@ exports.canCreate = async (req) => {
         return 'type is required.'
     }
 
-    if (!req.body.agent) {
-        let agent = await agentService.create({ user: req.context.user.id, organization: req.context.organization }, req.context)
-        req.context.agent = agent
-    }
+
 }
 
 exports.canUpdate = async (req) => {

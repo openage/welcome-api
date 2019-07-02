@@ -1,5 +1,7 @@
 'use strict'
 
+const db = require('../models')
+
 const updateScheme = require('../helpers/updateEntities')
 
 const update = async (data, organizationId, context) => {
@@ -23,18 +25,18 @@ const update = async (data, organizationId, context) => {
 const create = async (data, context) => {
     let log = context.logger.start('services/organizations:create')
 
-    let organization = await new db.organization({
-        _id: toObjectId(data.id),
+    let organization = new db.organization({
+        _id: data._id ? global.toObjectId(data._id) : undefined,
         name: data.name,
         code: data.code,
         shortName: data.shortName,
         type: data.type,
         address: data.address,
-        status: data.status
+        status: data.status,
+        tenant: context.tenant
     }).save()
 
     log.end()
-
     return organization
 }
 
@@ -46,7 +48,7 @@ const get = async (query, context) => {
     }
 
     if (typeof query === 'string') {
-        if (query.toObjectId()) {
+        if (query.isObjectId()) {
             return db.organization.findById(query)
         } else {
             return db.organization.findOne({ code: query })
@@ -73,6 +75,7 @@ const getOrCreate = async (data, context) => {
     if (!organization) {
         organization = await create(data, context)
     }
+
     log.end()
     return organization
 }
@@ -81,4 +84,3 @@ exports.update = update
 exports.getOrCreate = getOrCreate
 exports.create = create
 exports.get = get
-

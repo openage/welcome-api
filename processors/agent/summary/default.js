@@ -29,7 +29,7 @@ var createSummary = async (data, context) => {
     let summaryModel = {
         agent: data.id,
         date: data.date,
-        appointments: {
+        appointment: {
             total: Math.trunc(totalAppointmentForBooking),
             booked: 0
         }

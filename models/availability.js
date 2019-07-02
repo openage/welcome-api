@@ -3,7 +3,7 @@ var mongoose = require('mongoose')
 module.exports = {
     type: { // OPD, OT
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'queue-type',
+        ref: 'queueType',
         required: [true, 'queue-type required']
     },
     agent: { // Doctor, Principle

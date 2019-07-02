@@ -1,11 +1,10 @@
 'use strict'
 
-const updateScheme = require('../helpers/updateEntities')
 const offline = require('@open-age/offline-processor')
-const ObjectId = require('mongodb').ObjectID
 const db = require('../models')
 const moment = require('moment-timezone')
-const bapInvoiceProvider = require('../providers/bap/invoice')
+
+const invoiceProvider = require('../providers/bap/invoice')
 
 const generateInvoice = async (appointment, context) => {   // create invoice on bap service
     let log = context.logger.start('services/appointments:generateInvoice')
@@ -16,7 +15,7 @@ const generateInvoice = async (appointment, context) => {   // create invoice on
         type: appointment.queueType
     })
 
-    let invoice = await bapInvoiceProvider.create({
+    let invoice = await invoiceProvider.create({
         order: {
             id: appointment.id
         },
@@ -41,7 +40,7 @@ const generateInvoice = async (appointment, context) => {   // create invoice on
                     key: 'agent',
                     value: appointment.agent.id,
                     condition: 'eq'
-                },
+                }
             }
         }],
         buyer: {
@@ -107,7 +106,7 @@ const update = async (model, appointment, context) => {
 
     if (model.status) {
         context.processSync = true
-        await offline.queue('appointment', model.status, { id: appointment.id }, context)
+        offline.queue('appointment', model.status, { id: appointment.id }, context)
     }
 
     log.end()
@@ -117,14 +116,19 @@ const update = async (model, appointment, context) => {
 const getById = async (id, context) => {
     context.logger.start('getById')
 
-    return db.appointment.findById(id).populate('agent visitor organization')
+    return db.appointment.findById(id).populate('organization tenant').populate({
+        path: 'agent visitor',
+        populate: {
+            path: 'user'
+        }
+    })
 }
 
 const visitorAppointments = async (userId, query, sortQuery, context) => {
     let log = context.logger.start('visitorAppointments fetching ..')
     let orgQuery = {}
     if (context.organization) {
-        orgQuery.organization = ObjectId(context.organization.id)
+        orgQuery.organization = global.toObjectId(context.organization.id)
     }
 
     const appointments = await db.appointment.aggregate([{
@@ -140,7 +144,7 @@ const visitorAppointments = async (userId, query, sortQuery, context) => {
         }
     }, { $unwind: '$visitor_doc' }, {
         $match: {
-            'visitor_doc.user': ObjectId(userId)
+            'visitor_doc.user': global.toObjectId(userId)
         }
     }, {
         $lookup: {
@@ -184,15 +188,16 @@ const agentAppointments = async (query, context) => {
         query.agent = context.agent.id
     }
 
-    log.end()
-
-    return db.appointment.find(query).sort({ from: -1 })
+    let appointments = await db.appointment.find(query).sort({ from: 1 }).populate('organization')
         .populate({
-            path: 'visitor',
+            path: 'visitor agent',
             populate: {
-                path: 'user'
+                path: 'user organization'
             }
         })
+
+    log.end()
+    return appointments
 }
 
 const futureAppointments = async (query, context) => {
@@ -251,10 +256,44 @@ const oneDayAppointmentCount = async (query, context) => {
     return db.appointment.find(where).count()
 }
 
+const cancelAgentAppointments = async (data, context) => {
+    let log = context.logger.start('services/appointments:cancelAgentAppointment')
+
+    let agentId = data.agentId
+    const fromDate = moment(data.from).startOf('day')
+    const tillDate = moment(data.till).endOf('day')
+
+    let appointments = await db.appointment.find({
+        agent: agentId,
+        from: {
+            $gte: fromDate,
+            $lt: tillDate
+        },
+        status: { $in: ['scheduled', 'rescheduled'] }
+    })
+
+    if (!appointments.length) {
+        log.info(`no appointments found to cancelled`)
+        return
+    }
+
+    log.info(`Total ${appointments.length} appointments found`)
+
+    for (const appointment of appointments) {
+        await update({ status: 'closed' }, appointment, context)
+    }
+
+    log.end()
+    return `appointments successfully updated`
+}
+
 exports.create = create
 exports.getById = getById
 exports.update = update
+
 exports.visitorAppointments = visitorAppointments
 exports.agentAppointments = agentAppointments
 exports.futureAppointments = futureAppointments
+
 exports.oneDayAppointmentCount = oneDayAppointmentCount
+exports.cancelAgentAppointments = cancelAgentAppointments

@@ -5,6 +5,14 @@ const users = require('../services/users')
 const visitors = require('../services/visitors')
 const paging = require('../helpers/paging')
 
+exports.create = async (req) => {
+    let log = req.context.logger.start('api/visitors:create')
+
+    let visitor = await visitors.findOrCreate(req.body, req.context)
+    log.end()
+    return mapper.toModel(visitor)
+}
+
 exports.update = async (req, res) => {
     let log = logger.start('update')
     let model = req.body
@@ -71,7 +79,6 @@ exports.search = async (req) => {
     log.end()
 
     return page
-
 }
 
 exports.get = async (req) => {

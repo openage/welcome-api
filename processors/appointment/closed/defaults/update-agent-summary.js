@@ -7,7 +7,7 @@ exports.process = async (data, context) => {
     let log = context.logger.start('processors/cancelled/defaults:update-agent-summary')
 
     if (!data) { return }
-    let appointment = await appointmentService.getById(data.id)
+    let appointment = await appointmentService.getById(data.id, context)
 
     let summary = await summaryService.getWithAgent({
         date: appointment.from,
@@ -19,5 +19,4 @@ exports.process = async (data, context) => {
     return summaryService.updateOnAppointment(summary.id, -1, context).then((updatedSummary) => {
         log.info(`After appointment closed booked appointments count: ${updatedSummary.appointments.booked}`)
     })
-
 }

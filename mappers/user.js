@@ -16,14 +16,25 @@ exports.toModel = entity => {
         type: entity.type,
         availability: entity.availability
     }
+    if (entity.user) {
+        model.profile = {
+            firstName: entity.user.firstName,
+            lastName: entity.user.lastName,
+            dob: entity.user.dob,
+            gender: entity.user.gender,
+            pic: {
+                url: entity.user.picUrl
+            }
+        }
+    }
 
-    model.profile = {
-        firstName: entity.user.firstName,
-        lastName: entity.user.lastName,
-        dob: entity.user.dob,
-        gender: entity.user.gender,
-        pic: {
-            url: entity.user.picUrl
+    if (entity.role) {
+        if (entity.role._doc) {
+            model.role = {
+                id: entity.role.id,
+                code: entity.role.code,
+                key: entity.role.key
+            }
         }
     }
     return model

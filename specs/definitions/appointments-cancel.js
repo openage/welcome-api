@@ -1,5 +1,4 @@
 module.exports = {
     from: 'date',
-    till: 'date',
-    status: 'string'
+    till: 'date'
 }

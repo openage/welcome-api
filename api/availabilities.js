@@ -3,20 +3,17 @@
 const logger = require('@open-age/logger')('availabilities')
 const agents = require('../services/agents')
 const availabilities = require('../services/availabilities')
+
 const mapper = require('../mappers/availability')
-const queueTypeService = require('../services/queue-types')
 const appointmentService = require('../services/appointments')
+
+const db = require('../models')
 
 exports.create = async (req, res) => {
     let log = logger.start('create')
     let context = req.context
 
     try {
-        // if (!req.body.agent && !req.context.agent) {
-        //     context.agent = await agents.getByIdOrContext(id, context);
-        // }
-        req.body.type = await queueTypeService.getOrCreate({ name: req.body.type.name }, context)
-
         let availability = await availabilities.create(req.body, context)
         return res.data(mapper.toModel(availability))
     } catch (error) {
@@ -35,7 +32,7 @@ exports.update = async (req, res) => {
         }, req.context)
 
         if (upcomingAppointments && upcomingAppointments.length) {
-            throw `Your ${upcomingAppointments.length} upcoming appointments are pending, Please take action on appointments before reschedule your availability time`
+            throw new Error(`Your ${upcomingAppointments.length} upcoming appointments are pending, Please take action on appointments before reschedule your availability time`)
         }
 
         log.info('update availability details of agent', `${req.body}`)
@@ -71,4 +68,19 @@ exports.getByAgent = async (req, res) => {
 
     log.end()
     return mapper.toModel(availability)
+}
+
+exports.search = async (req) => {
+    let log = req.context.logger.start('api/availabilities:search')
+
+    const query = {}
+
+    if (req.query.agentId) {
+        query.agent = req.query.agentId
+    }
+
+    const availabilities = await db.availability.find(query).populate('type')
+
+    log.end()
+    return mapper.toSearchModel(availabilities)
 }

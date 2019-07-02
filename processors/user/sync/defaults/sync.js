@@ -2,7 +2,6 @@
 
 const queueLogService = require('./../../../../services/queue-logs')
 const userService = require('./../../../../services/users')
-const offline = require('@open-age/offline-processor')
 
 exports.process = async (data, context) => {
     let log = context.logger.start('processor:user:sync:defaults')
@@ -13,7 +12,7 @@ exports.process = async (data, context) => {
 
     queueLog.context.logger = context.logger
 
-    return userService.updateByDirectory(queueLog.data, queueLog.context).then(() => {
+    return userService.sync(queueLog.data, queueLog.context).then(() => {
         log.info('user updated')
     }).catch((err) => {
         log.error(err)
